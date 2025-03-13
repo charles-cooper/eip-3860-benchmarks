@@ -60,10 +60,11 @@ std::vector<uint8_t> read_bytecode_from_file(const std::string& filename) {
 }
 
 std::vector<bool> perform_jumpdest_analysis(const std::vector<uint8_t>& bytecode) {
-    std::vector<bool> valid_jumpdests(bytecode.size(), false);
-    size_t pc = 0;
+    size_t bytecode_size = bytecode.size();
 
-    while (pc < bytecode.size()) {
+    std::vector<bool> valid_jumpdests(bytecode_size);
+
+    for (size_t pc = 0; pc < bytecode_size; pc++) {
         uint8_t opcode = bytecode[pc];
         
         // Mark valid JUMPDEST
@@ -72,16 +73,10 @@ std::vector<bool> perform_jumpdest_analysis(const std::vector<uint8_t>& bytecode
         }
         
         // Skip push data
-        if (opcode >= OP_PUSH1 && opcode <= OP_PUSH32) {
+        else if (opcode >= OP_PUSH1 && opcode <= OP_PUSH32) {
             size_t push_bytes = opcode - OP_PUSH1 + 1;
             pc += push_bytes;
-            // Ensure we don't go past the end of bytecode
-            if (pc >= bytecode.size()) {
-                break;
-            }
         }
-        
-        pc++;
     }
     
     return valid_jumpdests;
