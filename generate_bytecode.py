@@ -47,7 +47,7 @@ def main():
     
     # Define sizes to generate (in bytes)
     sizes = [
-        1,                  # 1 byte
+        128,                # 128 bytes
         1024,               # 1 KB
         48 * 1024,          # 48 KB (EIP-3860 limit)
         64 * 1024,          # 64 KB 

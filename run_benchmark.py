@@ -223,10 +223,10 @@ def generate_report(results, csv_file, plot_file, distribution_plot):
     # Find the 48KB files (EIP-3860 limit)
     eip_limit_jumpdest = next((r for r in jumpdest_results if r['bytecode_size'] == 48 * 1024))
     eip_limit_push = next((r for r in push_results if r['bytecode_size'] == 48 * 1024), None)
-    
+
     jumpdest_ratio = max_jumpdest_time / eip_limit_jumpdest['average_ms']
     push_ratio = max_push_time / eip_limit_push['average_ms']
-    
+
     with open(REPORT_FILE, 'w') as f:
         f.write("# JUMPDEST Analysis Benchmark Report\n\n")
         
@@ -240,39 +240,52 @@ def generate_report(results, csv_file, plot_file, distribution_plot):
         f.write(f"- Maximum analysis time for JUMPDEST-only bytecode: {max_jumpdest_time:.2f} ms\n")
         f.write(f"- Maximum analysis time for PUSH1 0x5b sequences: {max_push_time:.2f} ms\n")
         f.write(f"- Performance ratio (15MB / 48KB) for JUMPDEST-only: {jumpdest_ratio:.2f}x\n")
-        f.write(f"- Performance ratio (15MB / 48KB) for PUSH1 sequences: {push_ratio:.2f}x\n\n")
+        f.write(f"- Performance ratio (15MB / 48KB) for PUSH1 sequences: {push_ratio:.2f}x\n")
         
-        f.write("## Analysis Performance Charts\n\n")
-        f.write(f"![Analysis Performance]({os.path.relpath(plot_file)})\n\n")
-        f.write(f"![Runtime Distribution]({os.path.relpath(distribution_plot)})\n\n")
+        # Calculate and write normalized performance metrics
+        largest_jumpdest = jumpdest_results[-1]
+        largest_push = push_results[-1]
+        jumpdest_normalized = largest_jumpdest['average_ms'] * 1000 / (largest_jumpdest['bytecode_size'] / 1024)
+        push_normalized = largest_push['average_ms'] * 1000 / (largest_push['bytecode_size'] / 1024)
+        f.write(f"- Normalized time for largest JUMPDEST-only bytecode: {jumpdest_normalized:.3f} us/KB\n")
+        f.write(f"- Normalized time for largest PUSH1 sequences: {push_normalized:.3f} us/KB\n\n")
+        
+        if MATPLOTLIB_AVAILABLE:
+            f.write("## Analysis Performance Charts\n\n")
+            f.write(f"![Analysis Performance]({os.path.relpath(plot_file)})\n\n")
+            f.write(f"![Runtime Distribution]({os.path.relpath(distribution_plot)})\n\n")
         
         f.write("## Detailed Results\n\n")
         
         # JUMPDEST results
         f.write("### JUMPDEST-only Bytecode\n\n")
-        f.write("| Size | Size (KB) | Average Time (ms) | JUMPDESTs Found | Ratio to 48KB |\n")
-        f.write("|------|-----------|-------------------|-----------------|---------------|\n")
+        f.write("| Size | Size (KB) | Average Time (ms) | Time per KB (us/KB) | JUMPDESTs Found | Ratio to 48KB |\n")
+        f.write("|------|-----------|-------------------|---------------------|-----------------|---------------|\n")
         
         eip_time = eip_limit_jumpdest['average_ms'] if eip_limit_jumpdest else 1.0
         
         for result in jumpdest_results:
             ratio = result['average_ms'] / eip_time
+            # Calculate normalized time (ms per KB)
+            normalized_time = result['average_ms'] * 1000 / (result['bytecode_size'] / 1024) if result['bytecode_size'] > 0 else 0
             f.write(f"| {result['bytecode_size']} | {result['bytecode_size']/1024:.2f} KB | ")
-            f.write(f"{result['average_ms']:.3f} ms | {result['jumpdests_found']} | {ratio:.2f}x |\n")
+            f.write(f"{result['average_ms']:.3f} ms | {normalized_time:.3f} us/KB | {result['jumpdests_found']} | {ratio:.2f}x |\n")
         
         f.write("\n")
         
         # PUSH results
         f.write("### PUSH1 0x5b Sequence Bytecode\n\n")
-        f.write("| Size | Size (KB) | Average Time (ms) | JUMPDESTs Found | Ratio to 48KB |\n")
-        f.write("|------|-----------|-------------------|-----------------|---------------|\n")
+        f.write("| Size | Size (KB) | Average Time (ms) | Time per KB (ms/KB) | JUMPDESTs Found | Ratio to 48KB |\n")
+        f.write("|------|-----------|-------------------|---------------------|-----------------|---------------|\n")
         
         eip_time = eip_limit_push['average_ms'] if eip_limit_push else 1.0
         
         for result in push_results:
             ratio = result['average_ms'] / eip_time
+            # Calculate normalized time (us per KB)
+            normalized_time = result['average_ms'] * 1000 / (result['bytecode_size'] / 1024) if result['bytecode_size'] > 0 else 0
             f.write(f"| {result['bytecode_size']} | {result['bytecode_size']/1024:.2f} KB | ")
-            f.write(f"{result['average_ms']:.3f} ms | {result['jumpdests_found']} | {ratio:.2f}x |\n")
+            f.write(f"{result['average_ms']:.3f} ms | {normalized_time:.3f} us/KB | {result['jumpdests_found']} | {ratio:.2f}x |\n")
             
         f.write("\n")
    
