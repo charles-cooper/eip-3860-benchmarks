@@ -17,7 +17,7 @@ BYTECODE_DIR = 'bytecode_samples'
 # Directory to store the benchmark results
 RESULTS_DIR = 'benchmark_results'
 # File to write the report to
-REPORT_FILE = 'benchmark_report.md'
+REPORT_FILE = 'benchmark_results/summary_report.md'
 
 def run_command(cmd, cwd=None):
     """Run a command and return its output"""
