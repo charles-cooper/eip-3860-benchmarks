@@ -252,8 +252,8 @@ def generate_report(results, csv_file, plot_file, distribution_plot):
         
         if MATPLOTLIB_AVAILABLE:
             f.write("## Analysis Performance Charts\n\n")
-            f.write(f"![Analysis Performance]({os.path.relpath(plot_file)})\n\n")
-            f.write(f"![Runtime Distribution]({os.path.relpath(distribution_plot)})\n\n")
+            f.write(f"![Analysis Performance](./analysis_performance.png)\n\n")
+            f.write(f"![Runtime Distribution](./runtime_distribution.png)\n\n")
         
         f.write("## Detailed Results\n\n")
         
