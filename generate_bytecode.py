@@ -16,7 +16,7 @@ def generate_push_jumpdest_bytecode(size):
     sequences_count = size // 2
     remainder = size % 2
     
-    bytecode = bytes([OP_PUSH1, OP_JUMPDEST] * sequences_count)
+    bytecode = bytes([OP_PUSH1, OP_PUSH1] * sequences_count)
     
     # Add one more byte if size is odd
     if remainder:

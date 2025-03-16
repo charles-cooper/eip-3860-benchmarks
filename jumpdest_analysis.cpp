@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cassert>
+#include <cstring>
 #include <fstream>
 #include <vector>
 #include <chrono>
@@ -59,26 +61,24 @@ std::vector<uint8_t> read_bytecode_from_file(const std::string& filename) {
     return hex_string_to_bytes(buffer.str());
 }
 
-std::vector<bool> perform_jumpdest_analysis(const std::vector<uint8_t>& bytecode) {
+#define BOOL char
+
+std::vector<BOOL> perform_jumpdest_analysis(const std::vector<uint8_t>& bytecode) {
     size_t bytecode_size = bytecode.size();
 
-    std::vector<bool> valid_jumpdests(bytecode_size);
+    auto valid_jumpdests = std::vector<BOOL>(bytecode_size);
 
-    for (size_t pc = 0; pc < bytecode_size; pc++) {
+    for (int pc = 0; pc < bytecode_size; ++pc) {
         uint8_t opcode = bytecode[pc];
-        
-        // Mark valid JUMPDEST
-        if (opcode == OP_JUMPDEST) {
-            valid_jumpdests[pc] = true;
-        }
-        
+
+        valid_jumpdests[pc] = true;
+
         // Skip push data
-        else if (opcode >= OP_PUSH1 && opcode <= OP_PUSH32) {
+        if (opcode >= OP_PUSH1 && opcode <= OP_PUSH32) {
             size_t push_bytes = opcode - OP_PUSH1 + 1;
             pc += push_bytes;
         }
     }
-    
     return valid_jumpdests;
 }
 
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < num_runs; i++) {
         auto start = std::chrono::high_resolution_clock::now();
         
-        std::vector<bool> valid_jumpdests = perform_jumpdest_analysis(bytecode);
+        auto valid_jumpdests = perform_jumpdest_analysis(bytecode);
         
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> duration = end - start;
@@ -109,8 +109,8 @@ int main(int argc, char* argv[]) {
         
         // Count valid jumpdests so that perform_jumpdest_analysis is not optimized out
         int jumpdest_count = 0;
-        for (bool is_valid : valid_jumpdests) {
-            if (is_valid) jumpdest_count++;
+        for (int i = 0; i < bytecode.size(); i++) {
+            if (valid_jumpdests[i]) { jumpdest_count++; };
         }
         
         std::cout << "Run " << (i + 1) << ": " 
