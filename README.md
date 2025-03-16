@@ -7,7 +7,7 @@ create a new virtualenv with matplotlib (`pip install matplotlib`)
 
 compile the analyzer file:
 ```bash
-g++ -o jumpdest_analyzer jumpdest_analysis.cpp -std=c++17 -O3 -march=native
+g++ -o jumpdest_analyzer jumpdest_analysis.cpp -std=c++17 -O3 -march=native -mtune=native
 ```
 
 run the benchmark:
